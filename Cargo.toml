@@ -6,5 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nonebot_rs = { version = "0.3.0" ,features = ["matcher"] }
-tokio = "1.13.0"
+tokio = { version = "1.18.0",features = ["rt-multi-thread"] }
+tracing = "0.1"
+walle-core = { path = "walle-core",features = ["v11","websocket"] }
+walle-v11 = { path = "walle-core/walle-v11" }
+tracing-subscriber = { version = "0.3.11", features = ["env-filter", "fmt"] }
