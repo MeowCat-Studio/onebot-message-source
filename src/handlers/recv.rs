@@ -1,4 +1,4 @@
-use crate::bot::BOT;
+use crate::bot::ONE_BOT;
 use crate::ext::db::DbExt;
 use crate::CONFIG;
 use arcstr::ArcStr;
@@ -9,10 +9,9 @@ use mesagisto_client::{
   server::SERVER,
 };
 use tracing::trace;
-use walle_core::{MessageSegment, ExtendedMap};
 use walle_core::Message as OnebotMessage;
 use walle_core::MessageBuild;
-
+use walle_core::{ExtendedMap, MessageSegment};
 
 pub async fn recover() -> anyhow::Result<()> {
   for pair in &CONFIG.bindings {
@@ -33,12 +32,12 @@ pub async fn add(target: i64, address: &ArcStr) -> anyhow::Result<()> {
   Ok(())
 }
 pub async fn change(target: i64, address: &ArcStr) -> anyhow::Result<()> {
-  SERVER.unsub(&target.to_string().into()).await;
+  SERVER.unsub(&target.to_string().into());
   add(target, address).await?;
   Ok(())
 }
 pub async fn del(target: i64) -> anyhow::Result<()> {
-  SERVER.unsub(&target.to_string().into()).await;
+  SERVER.unsub(&target.to_string().into());
   Ok(())
 }
 pub async fn server_msg_handler(
@@ -67,14 +66,14 @@ async fn left_sub_handler(mut message: Message, target: ArcStr) -> anyhow::Resul
       base64_url::encode(&message.profile.id)
     };
     match single {
-        MessageType::Text { content } => {
+      MessageType::Text { content } => {
 
-          BOT.send_group_message(
-            target.to_string(),OnebotMessage::default().text(content.to_string())
-          ).await?;
-
-        },
-        MessageType::Image { id, url } => todo!(),
+        // BOT.send_group_message(
+        //   target.to_string(),OnebotMessage::default().text(content.to_string())
+        // ).await?;
+      }
+      MessageType::Image { id, url } => todo!(),
+      MessageType::Edit { content } => todo!(),
     }
   }
 

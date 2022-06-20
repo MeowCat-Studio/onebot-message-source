@@ -1,53 +1,50 @@
 pub mod recv;
 pub mod send;
 
-use crate::bot::BOT;
 use crate::bot::ONE_BOT;
 use async_trait::async_trait;
 use colored::*;
+use tracing::trace;
 use tracing::{debug, info};
+use walle_core::EventContent;
+use walle_core::EventType;
+use walle_core::StandardEvent;
 use walle_core::{app::ArcBot, EventHandler};
-use walle_v11::{
-  event::{EventContent, MetaContent},
-  Event,
-};
 
 pub struct MyHandler;
 
 #[async_trait]
-impl<A, R> EventHandler<Event, A, R> for MyHandler
+impl<A, R> EventHandler<StandardEvent, A, R> for MyHandler
 where
-  A: Send + 'static,
-  R: Send + 'static,
+  A: Send + Sync + 'static,
+  R: Send + Sync + 'static,
 {
-  async fn handle(&self, _: ArcBot<A, R>, event: Event) {
-    match event.content {
-      EventContent::Message(msg_c) => {
-        info!(target: "Walle-core", "[{}] Message -> from {}: {}", event.self_id.to_string().red(), msg_c.user_id.to_string().blue(), msg_c.raw_message.green());
-        match msg_c.sub {
-          walle_v11::event::MessageSub::Private { sender } => {
-            info!(target: "Walle-core", "[{}] Private Message -> from {}: {}", event.self_id.to_string().red(), sender.user_id.to_string().blue(), msg_c.raw_message.green());
+  async fn handle(&self, _: ArcBot<A, R>, event: StandardEvent) {
+    match &event.content {
+      EventContent::Meta(m) => debug!(
+        "[{}] MetaEvent -> Type {}",
+        event.self_id.red(),
+        m.detail_type().green()
+      ),
+      EventContent::Message(m) => {
+        let alt = if m.alt_message.is_empty() {
+          let mut t = format!("{:?}", m.message);
+          if t.len() > 15 {
+            let _ = t.split_off(15);
           }
-          walle_v11::event::MessageSub::Group { group_id, sender } => {
-            info!(target: "Walle-core", "[{}] Group Message -> from {} in {}: {}", event.self_id.to_string().red(), sender.user_id.to_string().blue(), group_id.to_string().blue(), msg_c.raw_message.green());
-          }
-        }
+          t
+        } else {
+          m.alt_message.clone()
+        };
+        info!(
+          "[{}] MessageEvent -> from {} alt {}",
+          event.self_id.red(),
+          m.user_id.blue(),
+          alt.green()
+        )
       }
-      EventContent::MetaEvent(meta_c) => match meta_c {
-        MetaContent::Lifecycle { sub_type: _ } => {
-          debug!(target: "oms", "Bot[{}] 已连接", event.self_id.to_string().red());
-          let bot = ONE_BOT
-            .get_bot(event.self_id.to_string().as_str())
-            .await
-            .unwrap();
-          BOT.init(bot);
-        }
-        MetaContent::Heartbeat {
-          status: _,
-          interval: _,
-        } => {}
-      },
-      _ => {}
+      EventContent::Notice(_) => trace!("[{}] NoticeEvent ->", event.self_id.red()),
+      EventContent::Request(_) => info!("[{}] RequestEvent ->", event.self_id.red()),
     }
   }
 }
