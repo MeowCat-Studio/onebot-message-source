@@ -5,19 +5,19 @@ mod bot;
 mod config;
 mod ext;
 mod handlers;
-use crate::handlers::recv;
-
+use self::handlers::recv;
 use self::bot::ONE_BOT;
 use self::config::CONFIG;
+
 use arcstr::ArcStr;
 use futures::FutureExt;
 use mesagisto_client::MesagistoConfig;
 use tracing::{info, warn, Level};
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-
 use walle_core::app::StandardOneBot;
 use walle_core::config::{AppConfig, WebSocketClient};
+
 #[macro_use]
 extern crate educe;
 #[macro_use]
